@@ -3,6 +3,7 @@
   <head>
     <title>P2POOL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <!-- Bootstrap -->
 	<link rel="shortcut icon" type="image/x-icon" href="icon.png" />
     <link href="css/bootstrap.css" rel="stylesheet">
@@ -12,6 +13,24 @@
 	<script language="javascript" type="text/javascript" src="js/jquery.jqplot.min.js"></script>
 	<script class="include" language="javascript" type="text/javascript" src="js/jqplot.pieRenderer.min.js"></script>
 	<style>
+.hash {
+	text-align: left;
+	font-family:"Lucida Console", Monaco, monospace;
+}
+.amounts {
+	text-align: right;
+}
+.total {
+	text-align: left;
+}
+#payouts-table {
+  width: -webkit-min-content;
+  width: -moz-min-content;
+  width: min-content;
+}
+#payouts-table tr td {
+	padding-right: 10px;
+}
 body {
   padding-top: 50px;
 }
@@ -42,10 +61,31 @@ body {
             // based on goblin's p2pool-stats project
 			var period = "day";
 
+// helper for right dates
+function calcTime(timestamp) {
+
+    // create Date object for current location
+    //d = new Date();
+
+    // convert to msec
+    // add local time zone offset
+    // get UTC time in msec
+	
+    //utc = (d.getTimezoneOffset() * 60000);
+
+    // create new Date object for different city
+    // using supplied offset
+    //nd = new Date(utc + timestamp);
+    nd = new Date(timestamp);
+
+    // return time as a string
+    return nd
+}
+
 			function LoadData()
 			{
-				$("#blocks").html("<tr><th>ID</th><th>Time</th><th>Hash / Explorer link</th><th>Share</th></tr>");
-				$("#payouts").html("<tr><th>address</th><th>amount in <span class=\"symbol\"></span></th></tr>");
+				$("#blocks-table").html("<tr><th>ID</th><th>Horário</th><th>Hash / Link para Explorador de blocos</th><th>Share</th></tr>");
+				$("#payouts-table").html("<tr><th>Endereço</th><th>Valor em <span class=\"symbol\"></span></th></tr>");
 				function values(o){ res = []; for(var x in o) res.push(o[x]); return res; }
 				
 				d3.json('/web/version', function(version) {
@@ -63,20 +103,21 @@ body {
 				    
 				    var arr = []; for(var i in pays) arr.push(i); arr.sort(function(a, b){return pays[b] - pays[a]});
 				    
-				    var tr = d3.select('#payouts').selectAll().data(arr).enter().append('tr');
-				    tr.append('td').append('a').text(function(addr){return addr}).attr('href', function(addr){return currency_info.address_explorer_url_prefix + addr});
-				    tr.append('td').text(function(addr){return pays[addr]});
+				    var tr = d3.select('#payouts-table').selectAll().data(arr).enter().append('tr');
+				    tr.append('td').attr('class', 'hash').append('a').text(function(addr){return addr}).attr('href', function(addr){return currency_info.address_explorer_url_prefix + addr});
+				    tr.append('td').attr('class', 'amounts').text(function(addr){return pays[addr].toFixed(8)});
 				    
-				    var total_tr = d3.select('#payouts').append('tr');
-				    total_tr.append('td').append('strong').text('Total');
-				    total_tr.append('td').text(d3.sum(arr, function(addr){return pays[addr]}).toFixed(8));
+				    var total_tr = d3.select('#payouts-table').append('tr');
+				    total_tr.append('th').append('strong').text('Total');
+				    total_tr.append('td').attr('class', 'amounts').text(d3.sum(arr, function(addr){return pays[addr]}).toFixed(8));
 				});
 				
 				d3.json('/recent_blocks', function(blocks) {
-				    var tr = d3.select('#blocks').selectAll().data(blocks).enter().append('tr');
+				    var tr = d3.select('#blocks-table').selectAll().data(blocks).enter().append('tr');
 				    tr.append('td').text(function(block){return block.number});
-				    tr.append('td').text(function(block){return new Date(1000*block.ts).toString()});
-				    tr.append('td').append('a').text(function(block){return block.hash}).attr('href', function(block){return currency_info.block_explorer_url_prefix + block.hash});
+				    //tr.append('td').text(function(block){return calcTime(1000*block.ts).toString()});
+				    tr.append('td').text(function(block){return calcTime(1000*block.ts).toString()});
+				    tr.append('td').append('span').attr('class', 'hash').append('a').text(function(block){return block.hash}).attr('href', function(block){return currency_info.block_explorer_url_prefix + block.hash});
 				    tr.append('td').append('a').text('→').attr('href', function(block){return 'share.html#' + block.share});
 				});
 			    });
@@ -192,7 +233,6 @@ body {
 					  legend: { show:true, location: 'e' }
 					}
 				  );
-				  
 
 				  
 				  
@@ -239,12 +279,12 @@ body {
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">P2POOL (<span class="symbol upper"></span>)</a>
+          <a class="navbar-brand" href=".">P2POOL (<span class="symbol upper"></span>)</a>
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="">Stats</a></li>
-            <li><a href="graphs.html">Graphs</a></li>
+            <li class="active"><a href=".">Status</a></li>
+            <li><a href="graphs.html">Gráficos</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -253,30 +293,30 @@ body {
     <div class="container">
 	
 <ul class="nav nav-tabs">
-	<li><a href="#start" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span> Start</a></li>
-	<li class="active"><a href="#home" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span> Pool stats</a></li>
-	<li><a href="#share" data-toggle="tab"><span class="glyphicon glyphicon-retweet"></span> Share explorer</a></li>
-	<li><a href="#blocks" data-toggle="tab"><span class="glyphicon glyphicon-th-list"></span> Blocks</a></li>
-	<li><a href="#payouts" data-toggle="tab"><span class="glyphicon glyphicon-usd"></span> Payout</a></li>
+	<li class="active"><a href="#start" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span> Instruções</a></li>
+	<li><a href="#home" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span> Status da pool</a></li>
+	<li><a href="#share" data-toggle="tab"><span class="glyphicon glyphicon-retweet"></span> Explorador de "shares"</a></li>
+	<li><a href="#blocks" data-toggle="tab"><span class="glyphicon glyphicon-th-list"></span> Blocos</a></li>
+	<li><a href="#payouts" data-toggle="tab"><span class="glyphicon glyphicon-usd"></span> Pagamentos</a></li>
 </ul>
 </div>
     <div class="container">
       <div class="starter-template">
 
 		<div class="tab-content">
-			<div class="tab-pane active" id="home">
+			<div class="tab-pane" id="home">
 			
 			<center>
 			<div class="navbar navbar-default" style="width:1000px">
                 <div class="navbar-header" style="width: 900px;">
-				<a class="navbar-brand" href="javascript:void(0)">Scale</a>
+				<a class="navbar-brand" href="javascript:void(0)">Escala</a>
 				 <ul class="nav navbar-nav navbar-right">
-				      <li id="scale1"><a href="javascript:ChangeCurrentPeriod('hour', 'scale1');">Hour</a></li>
-				      <li id="scale2" class="active"><a href="javascript:ChangeCurrentPeriod('day', 'scale2');">Day</a></li>
-				      <li id="scale3"><a href="javascript:ChangeCurrentPeriod('week', 'scale3');">Week</a></li>
-				      <li id="scale4"><a href="javascript:ChangeCurrentPeriod('month', 'scale4');">Month</a></li>
-				      <li id="scale5"><a href="javascript:ChangeCurrentPeriod('year', 'scale5');">Year</a></li>
-				      <li><input type="checkbox" name="autorefresh" id="autorefresh" /><label for="autorefresh">Auto-refresh</label></li>
+				      <li id="scale1"><a href="javascript:ChangeCurrentPeriod('hour', 'scale1');">Hora</a></li>
+				      <li id="scale2" class="active"><a href="javascript:ChangeCurrentPeriod('day', 'scale2');">Dia</a></li>
+				      <li id="scale3"><a href="javascript:ChangeCurrentPeriod('week', 'scale3');">Semana</a></li>
+				      <li id="scale4"><a href="javascript:ChangeCurrentPeriod('month', 'scale4');">Mês</a></li>
+				      <li id="scale5"><a href="javascript:ChangeCurrentPeriod('year', 'scale5');">Ano</a></li>
+				      <li><input type="checkbox" name="autorefresh" id="autorefresh" /><label for="autorefresh">Atualizar automático</label></li>
 				    </ul>
                 </div>
 				</div>
@@ -289,38 +329,38 @@ body {
 					<table class="table table-striped" style="width: 1000px">
 						<tbody>
 							<tr>
-							  <td><h5>Local rate</h5></td>
+							  <td><h5>Hash local</h5></td>
 							  <td><span id="local_rate" class="badge"></span> (<span id="local_doa"></span> DOA)</td>
 							  <td></td>
-							  <td><h5>Expected time to share</h5></td>
+							  <td><h5>Tempo entre "shares"</h5></td>
 							  <td><span id="time_to_share" class="badge"></span> (<span id="time_to_share_minute"></span> minutes)</td>
 							</tr>
 							<tr>
 							  <td><h5>Shares</h5></td>
 							  <td><span id="shares_total" class="badge"></span> total (<span id="shares_orphan" class="label label-warning"></span> orphaned, <span id="shares_dead" class="label label-warning"></span> dead) Efficiency: <span class="label label-info" id="efficiency"></span></td>
 							  <td></td>
-							  <td><h5>Payout if a block were found NOW</h5></td>
+							  <td><h5>Pagamento se encontrar um bloco AGORA</h5></td>
 							  <td><span id="payout_amount" class="badge"></span> <span class="symbol"></span></td>
 							</tr>
 							<tr>
 							<tr>
-							  <td><h5>Pool rate</h5></td>
+							  <td><h5>Hash da pool</h5></td>
 							  <td><span id="pool_rate" class="badge"></span> (<span id="pool_stale"></span> DOA+orphan)</td>
 							  <td></td>
-							  <td><h5>Share difficulty</h5></td>
+							  <td><h5>Dificuldade da "share"</h5></td>
 							  <td><span id="difficulty" class="badge"></span></td>
 							</tr>
 							<tr>
-							  <td><h5>Node uptime</h5></td>
+							  <td><h5>Tempo no ar</h5></td>
 							  <td><span id="uptime_days" class="badge"></span> (<span id="uptime_hours"></span> hours)</td>
 							  <td></td>
-							  <td><h5>Peers</h5></td>
+							  <td><h5>Pools conectadas</h5></td>
 							  <td><span id="peers_out"></span> out, <span id="peers_in"></span> in</td>
 							</tr>
-							  <td><h5>Current block value</h5></td>
+							  <td><h5>Valor de bloco atual</h5></td>
 							  <td><span id="block_value" class="badge"></span> <span class="symbol"></span></td>
 							  <td></td>
-							  <td><h5>Expected time to block</h5></td>
+							  <td><h5>Tempo até o próximo bloco</h5></td>
 							  <td><span id="time_to_block" class="badge"></span></td>
 							</tr>
 						</tbody>
@@ -329,11 +369,11 @@ body {
 				<br/>
 				<div style="width: 1100px">
 					<div class="well" style="width:550px; float: left">
-						<h4>Local Shares</h4>
+						<h4>"Shares" locais</h4>
 						<div id="ShareChart" width="450" height="450"></div>
 					</div>
 					<div class="well" style="width:550px; float: right">
-						<h4>Global pool speed</h4>
+						<h4>Velocidade global da pool</h4>
 						<div id="SpeedChart" width="450" height="450"></div>
 					</div>
 				</div>
@@ -342,61 +382,70 @@ body {
 			</div>
 			
 			
-			<div class="tab-pane" id="start">
+			<div class="tab-pane active" id="start">
 			<div class="container">
 				<center>
-    <p><span class="label label-primary">1.</span> <strong>Download a miner.</strong></p>
+    <p><span class="label label-primary">1.</span> <strong>Baixe seu minerador.</strong></p>
       <ul>
-        <li><em>CGMiner Linux/Windows:</em> <a href="http://ck.kolivas.org/apps/cgminer/" target="_blank">Download here</a></li>
-        <li><em>CGMiner Mac OS X:</em> <a href="http://spaceman.ca/cgminer/" target="_blank">Download here</a></li>
-        <li><em>BFGMiner Linux/Windows:</em> <a href="http://bfgminer.org" target="_blank">Download here</a></li>
-        <li><em>CPU Miner Mac/Linux/Windows:</em> precompiled binaries are available <a href="https://bitcointalk.org/index.php?topic=55038.msg654850#msg654850" target="_blank">Download here</a>.</li>
+        <li><em>Girino SGMiner Linux/Windows:</em> <a href="https://mega.co.nz/#F!AZJCkbaT!UDu9jWinFweaD4JcQgiQxQ" target="_blank">Download aqui</a></li>
+        <li><em>CPU Miner Windows:</em> binários disponíveis <a href="http://dash.org/downloads/xcoin-miner.zip" target="_blank">Download aqui</a>.</li>
+        <li><em>CPU Miner Mac/Linux:</em> Apenas código fonte <a href="https://github.com/ig0tik3d/darkcoin-cpuminer-1.2c" target="_blank">Download aqui</a>.</li>
       </ul>
     </li>
-    <p><span class="label label-primary">2.</span> <strong>Configure your miner.</strong></p>
-      <p>Settings for Stratum (recommended):</p>
+    <p><span class="label label-primary">2.</span> <strong>Configure seu minerador.</strong></p>
+
+      <p>Configurações para Stratum (recomendada):</p>
       	
 		<table class="table">
         <tbody>
-          <tr><td>Username:</td><td><kbd><em>Wallet Address</em></kbd></td></tr>
-          <tr><td>Password:</td><td><kbd><em>Anything example x</em></kbd></td></tr>
+          <tr><td>Usuário:</td><td><kbd><em>Endereço DilmaCoin (ex.: "DQ8AwqR2XJE9G5dSEfspJYH7Spre85dj6L")</em></kbd></td></tr>
+          <tr><td>Senha:</td><td><kbd><em>x</em></kbd></td></tr>
         </tbody>
       </table>
 	  
-	        <p>If you use a command-line miner, type:</p>
-      <li>CGMiner</li>
-      <pre>./cgminer --scrypt -o stratum+tcp://pool:port -u <em>Walletaddress</em> -p <em>x</em></pre>
-      <li>BFGMiner</li>
-      <pre>./bfgminer --scrypt -o stratum+tcp://pool:port -u <em>Walletaddress</em> -p <em>x</em></pre>
-	  <li>CPUMiner</li>
-      <pre>./minerd -a scrypt -o stratum+tcp://pool:port -u <em>Walletaddress</em> -p <em>x</em></pre>
-      
-    </li>
+      <p>No linux, digite a seguinte linha no terminal:</p>
+
+          <li>MinerD</li>
+          <pre>./minerd -o stratum+tcp://<script>document.write(location.hostname);</script>:11058 -u <em>Endereço</em> -p <em>x</em> -a X11</pre>
+          <li>SGMiner</li>
+          <pre>./sgminer -o stratum+tcp://<script>document.write(location.hostname);</script>:11058 -u <em>Endereço</em> -p <em>x</em></pre>
+
+      <br />
+         <p>Para minerar usando o <strong> Windows </strong>, você precisa criar um arquivo .BAT para iniciar seu minerador. </p><p> Usando  o bloco de notas (ou outro programa próprio para isso como gvim, ou notepad++) crie um novo arquivo, e copie e cole o seguinte conteúdo dentro dele:</p>
+
+      <li>MinerD</li>
+      <pre>minerd.exe -o stratum+tcp://<script>document.write(location.hostname);</script>:11058 -u <em>Endereço</em> -p <em>x</em> -a X11</pre>
+      <li>SGMiner</li>
+      <pre>sgminer.exe -o stratum+tcp://<script>document.write(location.hostname);</script>:11058 -u <em>Endereço</em> -p <em>x</em></pre>
+
+      <br />
+      <p><strong><em>Atenção:</em></strong> algumas versões do <em>minerd</em> usam o nome da moeda/algoritmo em maiusculas, outras em minusculas. Tente trocar "-a X11" por "-a x11" caso obtenha uma mensagem de erro da primeira vez.</p>
+      <p> Lembre-se de substituir <em>Endereço</em> pelo seu Endereço Dilmacoin. Ex.:  -u DQ8AwqR2XJE9G5dSEfspJYH7Spre85dj6L -p x. Vá então no menu "Arquivo => salvar como" e grave o arquivo como "dilmacoin.bat" na mesma pasta onde estiver o minerd.exe ou o sgminer.exe.  Você está pronto para começar a mineração de dilmacoins. Clique no arquivo criado e você já estará minerando. </p>
 
 				</center></div>
 			</div>
 			<div class="tab-pane" id="share">
 
-			<p>Best share: <span id="best_share"></span></p>
-			<p>Verified heads: <span id="verified_heads"></span></p>
-			<p>Heads: <span id="heads"></span></p>
-			<p>Verified tails: <span id="verified_tails"></span></p>
-			<p>Tails: <span id="tails"></span></p>
+			<p>Melhor share: <span id="best_share"></span></p>
+			<p>Cabeças verificadas: <span id="verified_heads"></span></p>
+			<p>Cabeças: <span id="heads"></span></p>
+			<p>Caudas verificadas: <span id="verified_tails"></span></p>
+			<p>Caudas: <span id="tails"></span></p>
 
 			</div>
 			
 			<div class="tab-pane" id="blocks">
 
-			<table id="blocks" class="table table-striped table-hover">
-			<tr><th>ID</th><th>Time</th><th>Hash / Explorer link</th><th>Share</th></tr>
+			<table id="blocks-table" class="table table-striped table-hover" style="text-align: left;">
+			<tr><th>ID</th><th>Horário</th><th>Hash / Link no Explorador de blocos</th><th>Share</th></tr>
 			</table>
 
 			</div>
 			
 			<div class="tab-pane" id="payouts">
 
-			<table class="table table-striped table-hover" id="payouts">
-			    <tr><th>Address</th><th>Amount (<span class="symbol"></span>) </th></tr>
+			<table class="table table-striped table-hover" id="payouts-table">
+			    <tr><th>Endereço</th><th>Valor (<span class="symbol"></span>) </th></tr>
 			</table>
 
 			</div>
@@ -411,10 +460,11 @@ body {
     </div><!-- /.container -->
 	  </br>
 	  	<div style="border-bottom: 1px solid #ddd;"></div>
-	<center>
-        <tt>P2Pool version: <span id="version"></span></tt><br/>
-		<tt>Interface by Krychu <a href="https://github.com/Krychuu/P2PoolNiceLook">Github</a></tt><br/>
-		<tt>Donate if you love it (DOGE DHEUbbx1vZtYCWruWReANZHxyieBF3BBid)(LTC LNs3CW5JDQLdgFJt4A98kZukvaTv3cTsLj) (BTC 12WBkDz89xhapvfMY9GJbM58WmDXhNrzDb)</tt>
+	<center style="font-size:75%;">
+        <tt>Versão da P2Pool: <span id="version"></span></tt><br/>
+		<tt>Interface por Krychu <a href="https://github.com/Krychuu/P2PoolNiceLook">Github</a> (traduzida e adaptada por Girino)</tt><br/>
+		<tt style="font-size:75%;">Doações para a pool (Girino) BTC: 1GiRiNoKznfGbt8bkU1Ley85TgVV7ZTXce</tt><br />
+		<tt style="font-size:60%">Doações par ao autor da interface: (DOGE DHEUbbx1vZtYCWruWReANZHxyieBF3BBid)(LTC LNs3CW5JDQLdgFJt4A98kZukvaTv3cTsLj) (BTC 12WBkDz89xhapvfMY9GJbM58WmDXhNrzDb)</tt>
 	</center>
 
 			<script type="text/javascript">
@@ -708,7 +758,8 @@ body {
 			LoadData();
 		  	UpdateData();
 			setInterval("AutoRefresh()", 3 * 1000);
-		    	$('#home a:first').tab('show');
+		    	//$('#home a:first').tab('show');
+		    	$('#start a:first').tab('show');
 		});
         </script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
