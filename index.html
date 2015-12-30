@@ -86,6 +86,7 @@ function calcTime(timestamp) {
 			{
 				$("#blocks-table").html("<tr><th>ID</th><th>Horário</th><th>Hash / Link para Explorador de blocos</th><th>Share</th></tr>");
 				$("#payouts-table").html("<tr><th>Endereço</th><th>Valor em <span class=\"symbol\"></span></th></tr>");
+				$("#miner-table").html("<tr><th>Address</th><th>Hashrate</th><th>Rejected</th></tr>");
 				function values(o){ res = []; for(var x in o) res.push(o[x]); return res; }
 				
 				d3.json('/web/version', function(version) {
@@ -120,6 +121,17 @@ function calcTime(timestamp) {
 				    tr.append('td').append('span').attr('class', 'hash').append('a').text(function(block){return block.hash}).attr('href', function(block){return currency_info.block_explorer_url_prefix + block.hash});
 				    tr.append('td').append('a').text('→').attr('href', function(block){return 'share.html#' + block.share});
 				});
+
+				d3.json('/local_stats', function(stats) {
+				    var addresses = new Set();
+				    for (var ii in stats['miner_hash_rates']) { addresses.add(ii); }
+				    for (var ii in stats['miner_dead_hash_rates']) { addresses.add(ii); }
+				    var addrs = Array.from(addresses);
+				    var tr = d3.select('#miner-table').selectAll().data(addrs).enter().append('tr');
+				    tr.append('td').text(function(addr){return addr});
+				    tr.append('td').text(function(addr){return d3.format('.3s')(stats['miner_hash_rates'][addr]) + 'H/s'});
+				    tr.append('td').text(function(addr){return d3.format('.3s')(stats['miner_dead_hash_rates'][addr]) + 'H/s'});
+				});
 			    });
 			    
 				$("#best_share").html("");
@@ -148,7 +160,6 @@ function calcTime(timestamp) {
 			function UpdateData()
 			{
 				function values(o){ res = []; for(var x in o) res.push(o[x]); return res; }
-
 				d3.json('/local_stats', function(local_stats) {
 					d3.select('#peers_in').text(local_stats.peers.incoming);
 					d3.select('#peers_out').text(local_stats.peers.outgoing);
@@ -295,6 +306,7 @@ function calcTime(timestamp) {
 <ul class="nav nav-tabs">
 	<li class="active"><a href="#start" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span> Instruções</a></li>
 	<li><a href="#home" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span> Status da pool</a></li>
+	<li><a href="#miners" data-toggle="tab"><span class="glyphicon glyphicon-stats"></span> Mineradores ativos</a></li>
 	<li><a href="#share" data-toggle="tab"><span class="glyphicon glyphicon-retweet"></span> Explorador de "shares"</a></li>
 	<li><a href="#blocks" data-toggle="tab"><span class="glyphicon glyphicon-th-list"></span> Blocos</a></li>
 	<li><a href="#payouts" data-toggle="tab"><span class="glyphicon glyphicon-usd"></span> Pagamentos</a></li>
@@ -434,6 +446,14 @@ function calcTime(timestamp) {
 
 			</div>
 			
+			<div class="tab-pane" id="miners">
+
+			<table id="miner-table" class="table table-striped table-hover" style="text-align: left;">
+			<tr><th>Address</th><th>Hashrate</th><th>Rejected</th><th>Payout</th></tr>
+			</table>
+
+			</div>
+
 			<div class="tab-pane" id="blocks">
 
 			<table id="blocks-table" class="table table-striped table-hover" style="text-align: left;">
